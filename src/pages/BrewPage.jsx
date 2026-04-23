@@ -42,7 +42,10 @@ export default function BrewPage({ profile, onExit, onComplete }) {
     <div style={{ background: 'var(--paper)', height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Top chrome */}
       <div style={{
-        padding: '58px 20px 14px',
+        paddingTop: 'max(44px, env(safe-area-inset-top, 44px))',
+        paddingBottom: 12,
+        paddingLeft: 20,
+        paddingRight: 20,
         borderBottom: '1px solid var(--rule-2)',
         background: 'var(--paper)',
         flexShrink: 0,
@@ -179,31 +182,39 @@ function StepBody({ step, profile, onNext, onBack }) {
 
   return (
     <div className="slide-up" style={{
-      flex: 1, display: 'flex', flexDirection: 'column', padding: '22px 20px 20px', minHeight: 0,
+      flex: 1, display: 'flex', flexDirection: 'column',
+      padding: '14px 20px 12px', minHeight: 0, overflow: 'hidden',
     }}>
       <SheetLabel index={step.index} total={7} label={step.label} />
 
-      <div style={{ marginTop: 14, marginBottom: 10, flexShrink: 0 }}>
+      <div style={{ marginTop: 8, flexShrink: 0 }}>
         <h2 style={{
           margin: 0, fontFamily: 'Instrument Serif, serif', fontStyle: 'italic',
-          fontSize: 40, lineHeight: 1.02, letterSpacing: '-0.02em',
+          fontSize: 36, lineHeight: 1.05, letterSpacing: '-0.02em',
           color: 'var(--ink)', fontWeight: 400,
         }}>
           {step.label}
           {isTimer && (
             <span className="cursor-blink" style={{
-              display: 'inline-block', width: 3, height: 28,
+              display: 'inline-block', width: 3, height: 26,
               background: 'var(--accent)', verticalAlign: '-0.1em', marginLeft: 4,
             }} />
           )}
         </h2>
-        <p style={{ margin: '8px 0 0', color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.5, maxWidth: '32ch' }}>
+        <p style={{ margin: '5px 0 0', color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.4, maxWidth: '32ch' }}>
           {step.sub}
         </p>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: 0, gap: 8 }}>
+      {/* Visual area — fills all remaining space, distributes children evenly */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: 'space-between', alignItems: 'center',
+        minHeight: 0, overflow: 'hidden', paddingTop: 8, paddingBottom: 2,
+      }}>
+        {/* Illustration — grows/shrinks to fill available space */}
         <StepIllustration stepKey={step.key} running={running} pct={pct} />
+
         {isTimer ? (
           <TimerRing remaining={remaining} total={dur} running={running} done={didDone} />
         ) : (
@@ -212,7 +223,7 @@ function StepBody({ step, profile, onNext, onBack }) {
 
         {/* Secondary metrics strip */}
         <div style={{
-          marginTop: 16, width: '100%',
+          width: '100%',
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
           border: '1px solid var(--rule-2)', background: 'white', flexShrink: 0,
         }}>
@@ -221,9 +232,9 @@ function StepBody({ step, profile, onNext, onBack }) {
             ['Dose', profile.coffee_g.toFixed(1), 'g'],
             ['Temp', profile.water_temp_c, '°C'],
           ].map(([k, v, u], i) => (
-            <div key={k} style={{ padding: '10px 12px', borderRight: i < 2 ? '1px solid var(--rule-2)' : 'none' }}>
+            <div key={k} style={{ padding: '8px 12px', borderRight: i < 2 ? '1px solid var(--rule-2)' : 'none' }}>
               <div className="mono" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 2 }}>{k}</div>
-              <div className="big-num" style={{ fontSize: 15, color: 'var(--ink)' }}>
+              <div className="big-num" style={{ fontSize: 14, color: 'var(--ink)' }}>
                 {v}<span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--ink-3)', marginLeft: 2 }}>{u}</span>
               </div>
             </div>
@@ -232,7 +243,7 @@ function StepBody({ step, profile, onNext, onBack }) {
       </div>
 
       {/* Action bar */}
-      <div style={{ marginTop: 14, display: 'flex', gap: 8, flexShrink: 0 }}>
+      <div style={{ marginTop: 10, display: 'flex', gap: 8, flexShrink: 0 }}>
         <button className="btn btn-ghost hit" onClick={onBack} style={{ flex: '0 0 auto', padding: '0 14px' }}>
           <IconChevL size={12} /> Back
         </button>
@@ -328,9 +339,14 @@ function MetricBlock({ metric }) {
 
 function StepIllustration({ stepKey, running, pct = 0 }) {
   return (
-    <svg width="200" height="160" viewBox="0 0 200 160" fill="none"
+    <svg
+      viewBox="0 0 200 160" fill="none"
       stroke="var(--ink)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"
-      style={{ display: 'block', flexShrink: 0 }}>
+      preserveAspectRatio="xMidYMid meet"
+      style={{
+        flex: '1 1 0', minHeight: 60, maxHeight: 160,
+        width: '100%', maxWidth: 220, display: 'block', overflow: 'hidden',
+      }}>
       <line x1="10" y1="150" x2="190" y2="150" stroke="var(--ink-3)" strokeWidth="1" />
       {stepKey === 'preheat' && <PreheatScene />}
       {stepKey === 'dose'    && <DoseScene />}
@@ -499,25 +515,30 @@ function PressScene({ pct }) {
 function DoneStep({ profile, elapsed, onAgain, onHome }) {
   return (
     <div className="slide-up" style={{
-      flex: 1, display: 'flex', flexDirection: 'column', padding: '26px 20px 20px', minHeight: 0,
+      flex: 1, display: 'flex', flexDirection: 'column',
+      padding: '14px 20px 12px', minHeight: 0, overflow: 'hidden',
     }}>
       <SheetLabel index={7} total={7} label="Brewed" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 20, minHeight: 0 }}>
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        justifyContent: 'space-between', alignItems: 'center',
+        minHeight: 0, paddingTop: 10,
+      }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
             display: 'inline-grid', placeItems: 'center',
-            width: 66, height: 66, border: '1.5px solid var(--ink)', marginBottom: 14,
+            width: 56, height: 56, border: '1.5px solid var(--ink)', marginBottom: 10,
           }}>
-            <IconCheck size={32} color="var(--ink)" sw={2} />
+            <IconCheck size={28} color="var(--ink)" sw={2} />
           </div>
           <h2 style={{
             margin: 0, fontFamily: 'Instrument Serif, serif', fontStyle: 'italic',
-            fontSize: 44, letterSpacing: '-0.02em', color: 'var(--ink)', fontWeight: 400, lineHeight: 1,
+            fontSize: 38, letterSpacing: '-0.02em', color: 'var(--ink)', fontWeight: 400, lineHeight: 1,
           }}>
             Ready to pour.
           </h2>
-          <p style={{ margin: '10px 0 0', color: 'var(--ink-2)', fontSize: 14 }}>
+          <p style={{ margin: '6px 0 0', color: 'var(--ink-2)', fontSize: 13 }}>
             Decant immediately to stop extraction.
           </p>
         </div>
@@ -525,7 +546,7 @@ function DoneStep({ profile, elapsed, onAgain, onHome }) {
         {/* Session receipt */}
         <div style={{ width: '100%', background: 'white', border: '1px solid var(--rule-2)' }}>
           <div style={{
-            padding: '12px 14px', borderBottom: '1px dashed var(--rule-2)',
+            padding: '10px 14px', borderBottom: '1px dashed var(--rule-2)',
             display: 'flex', justifyContent: 'space-between',
           }}>
             <span className="mono" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
@@ -535,7 +556,7 @@ function DoneStep({ profile, elapsed, onAgain, onHome }) {
               {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           </div>
-          <div style={{ padding: '12px 14px' }}>
+          <div style={{ padding: '8px 14px' }}>
             {[
               ['Profile', profile.name],
               ['Volume',  `${profile.volume_ml} ml`],
@@ -543,7 +564,7 @@ function DoneStep({ profile, elapsed, onAgain, onHome }) {
               ['Ratio',   formatRatio(profile.volume_ml, profile.coffee_g)],
               ['Total time', formatTime(elapsed)],
             ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}>
                 <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{k}</span>
                 <span className="big-num" style={{ fontSize: 12, color: 'var(--ink)' }}>{v}</span>
               </div>
