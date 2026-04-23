@@ -2,33 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { STEPS, formatTime, formatRatio } from '../data/steps'
 import { useCountdown } from '../hooks/useCountdown'
 import { playTimerDone } from '../utils/sound'
+import { requestNotifPermission, showNotif, dismissNotif } from '../utils/notifications'
 import { SheetLabel } from '../components/ui'
 import {
   IconClose, IconChevL, IconPlay, IconPause, IconReset, IconCheck, IconChev,
 } from '../components/icons'
 
 const DEFAULT_TITLE = 'Press — French Press Brewing'
-
-async function requestNotifPermission() {
-  if (!('Notification' in window)) return false
-  if (Notification.permission === 'granted') return true
-  if (Notification.permission === 'denied') return false
-  const p = await Notification.requestPermission()
-  return p === 'granted'
-}
-
-function sendNotif(title, body) {
-  if (Notification.permission !== 'granted') return
-  try {
-    const n = new Notification(title, {
-      body,
-      icon: '/french-press-coffee/icons/icon-192.png',
-      tag: 'brew-timer',
-      renotify: true,
-    })
-    setTimeout(() => n.close(), 8000)
-  } catch {}
-}
 
 export default function BrewPage({ profile, onExit, onComplete }) {
   const [stepIdx, setStepIdx] = useState(0)
@@ -136,16 +116,16 @@ function StepBody({ step, profile, onNext, onBack }) {
   const handleDone = useCallback(() => {
     setRunning(false)
     playTimerDone()
-    sendNotif('⏱ Timer complete', `${step.label} is done — tap to continue`)
+    showNotif(`✓ ${step.label} complete`, 'Tap to continue your brew')
     document.title = DEFAULT_TITLE
   }, [step.label])
 
-  const { remaining, reset } = useCountdown(dur, { running, onDone: handleDone })
+  const { remaining, remainingRef, reset } = useCountdown(dur, { running, onDone: handleDone })
   const metric = step.metric(profile)
   const pct = isTimer && dur > 0 ? (1 - remaining / dur) : 0
   const didDone = isTimer && remaining <= 0.05
 
-  // Update tab title with live countdown while running
+  // Live tab-title countdown
   useEffect(() => {
     if (!isTimer) return
     if (running && !didDone) {
@@ -155,8 +135,42 @@ function StepBody({ step, profile, onNext, onBack }) {
     }
   }, [isTimer, running, didDone, remaining, step.label])
 
-  // Reset title on step unmount
+  // Reset title on unmount
   useEffect(() => () => { document.title = DEFAULT_TITLE }, [])
+
+  // Live progress notification while tab is hidden
+  useEffect(() => {
+    if (!isTimer || !running || didDone) return
+
+    function pushProgress() {
+      const r = remainingRef.current
+      if (r > 0) showNotif(`⏱ ${step.label}`, `${formatTime(Math.ceil(r))} remaining`, { silent: true })
+    }
+
+    let interval = null
+
+    function onVisibility() {
+      if (document.hidden) {
+        pushProgress()
+        interval = setInterval(pushProgress, 30_000)
+      } else {
+        clearInterval(interval)
+        dismissNotif()
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    // If already hidden when timer starts
+    if (document.hidden) {
+      pushProgress()
+      interval = setInterval(pushProgress, 30_000)
+    }
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [isTimer, running, didDone, step.label, remainingRef])
 
   async function handleStart() {
     await requestNotifPermission()
