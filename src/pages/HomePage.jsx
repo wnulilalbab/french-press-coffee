@@ -208,7 +208,7 @@ function LogRow({ profiles }) {
         </div>
       </div>
       <div className="mono" style={{ fontSize: 10, color: 'var(--ink-4)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-        v1.0
+        v{__APP_VERSION__}
       </div>
     </div>
   )
