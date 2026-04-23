@@ -33,8 +33,9 @@ html, body {
 }
 
 #root {
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
+  height: var(--app-h, 100dvh);
   overflow: hidden;
   display: flex;
   flex-direction: column;

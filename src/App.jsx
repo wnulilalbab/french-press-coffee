@@ -29,6 +29,17 @@ export default function App() {
   const [profiles, setProfiles] = useState(() => loadProfiles() ?? SAMPLE_PROFILES)
   const [screen, setScreen] = useState({ name: 'home' })
 
+  useEffect(() => {
+    function update() {
+      const h = (window.visualViewport ?? window).height
+      document.documentElement.style.setProperty('--app-h', `${h}px`)
+    }
+    update()
+    const vvp = window.visualViewport ?? window
+    vvp.addEventListener('resize', update)
+    return () => vvp.removeEventListener('resize', update)
+  }, [])
+
   useEffect(() => { saveProfiles(profiles) }, [profiles])
 
   function findProfile(id) { return profiles.find(p => p.id === id) }

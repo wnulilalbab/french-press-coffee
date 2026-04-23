@@ -190,7 +190,7 @@ function StepBody({ step, profile, onNext, onBack }) {
       <div style={{ marginTop: 8, flexShrink: 0 }}>
         <h2 style={{
           margin: 0, fontFamily: 'Instrument Serif, serif', fontStyle: 'italic',
-          fontSize: 36, lineHeight: 1.05, letterSpacing: '-0.02em',
+          fontSize: 'clamp(22px, calc(var(--app-h, 800px) * 0.044), 36px)', lineHeight: 1.05, letterSpacing: '-0.02em',
           color: 'var(--ink)', fontWeight: 400,
         }}>
           {step.label}
@@ -201,7 +201,7 @@ function StepBody({ step, profile, onNext, onBack }) {
             }} />
           )}
         </h2>
-        <p style={{ margin: '5px 0 0', color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.4, maxWidth: '32ch' }}>
+        <p style={{ margin: '4px 0 0', color: 'var(--ink-2)', fontSize: 'clamp(11px, calc(var(--app-h, 800px) * 0.016), 13px)', lineHeight: 1.35, maxWidth: '32ch' }}>
           {step.sub}
         </p>
       </div>
@@ -287,8 +287,8 @@ function TimerRing({ remaining, total, running, done }) {
   const pct = total > 0 ? (1 - remaining / total) : 1
   const offset = c * (1 - pct)
   return (
-    <div style={{ position: 'relative', width: 150, height: 150, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-      <svg width="150" height="150" viewBox="0 0 150 150" style={{ position: 'absolute', inset: 0 }}>
+    <div style={{ position: 'relative', width: 'clamp(90px, calc(var(--app-h, 800px) * 0.17), 140px)', aspectRatio: '1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+      <svg viewBox="0 0 150 150" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
         <circle cx="75" cy="75" r={r} fill="none" stroke="var(--rule-2)" strokeWidth="1.5" />
         <circle cx="75" cy="75" r={r} fill="none"
           stroke={done ? 'var(--ok)' : 'var(--accent)'} strokeWidth="2.5"
@@ -310,7 +310,7 @@ function TimerRing({ remaining, total, running, done }) {
         })}
       </svg>
       <div style={{ textAlign: 'center', lineHeight: 1 }}>
-        <div className="big-num" style={{ fontSize: 32, color: 'var(--ink)', letterSpacing: '-0.03em' }}>
+        <div className="big-num" style={{ fontSize: 'clamp(18px, calc(var(--app-h, 800px) * 0.038), 32px)', color: 'var(--ink)', letterSpacing: '-0.03em' }}>
           {formatTime(Math.ceil(remaining))}
         </div>
         <div className="mono" style={{ fontSize: 8, letterSpacing: '0.2em', color: 'var(--ink-3)', textTransform: 'uppercase', marginTop: 6 }}>
@@ -327,7 +327,7 @@ function MetricBlock({ metric }) {
       <div className="mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
         {metric.label}
       </div>
-      <div className="big-num" style={{ fontSize: 44, color: 'var(--ink)', letterSpacing: '-0.03em', lineHeight: 1, marginTop: 6 }}>
+      <div className="big-num" style={{ fontSize: 'clamp(28px, calc(var(--app-h, 800px) * 0.054), 44px)', color: 'var(--ink)', letterSpacing: '-0.03em', lineHeight: 1, marginTop: 6 }}>
         {metric.value}
         <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 16, color: 'var(--ink-3)', marginLeft: 4 }}>{metric.unit}</span>
       </div>
@@ -344,7 +344,7 @@ function StepIllustration({ stepKey, running, pct = 0 }) {
       stroke="var(--ink)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"
       preserveAspectRatio="xMidYMid meet"
       style={{
-        flex: '1 1 0', minHeight: 60, maxHeight: 160,
+        flex: '1 1 0', minHeight: 50, maxHeight: 'clamp(80px, calc(var(--app-h, 800px) * 0.20), 150px)',
         width: '100%', maxWidth: 220, display: 'block', overflow: 'hidden',
       }}>
       <line x1="10" y1="150" x2="190" y2="150" stroke="var(--ink-3)" strokeWidth="1" />
