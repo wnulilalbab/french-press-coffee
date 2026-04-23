@@ -1,10 +1,34 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { STEPS, formatTime, formatRatio } from '../data/steps'
 import { useCountdown } from '../hooks/useCountdown'
+import { playTimerDone } from '../utils/sound'
 import { SheetLabel } from '../components/ui'
 import {
   IconClose, IconChevL, IconPlay, IconPause, IconReset, IconCheck, IconChev,
 } from '../components/icons'
+
+const DEFAULT_TITLE = 'Press — French Press Brewing'
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return false
+  if (Notification.permission === 'granted') return true
+  if (Notification.permission === 'denied') return false
+  const p = await Notification.requestPermission()
+  return p === 'granted'
+}
+
+function sendNotif(title, body) {
+  if (Notification.permission !== 'granted') return
+  try {
+    const n = new Notification(title, {
+      body,
+      icon: '/french-press-coffee/icons/icon-192.png',
+      tag: 'brew-timer',
+      renotify: true,
+    })
+    setTimeout(() => n.close(), 8000)
+  } catch {}
+}
 
 export default function BrewPage({ profile, onExit, onComplete }) {
   const [stepIdx, setStepIdx] = useState(0)
@@ -108,13 +132,36 @@ function StepBody({ step, profile, onNext, onBack }) {
   const isTimer = step.kind === 'timer'
   const [running, setRunning] = useState(false)
   const dur = isTimer ? step.duration(profile) : 0
-  const { remaining, reset } = useCountdown(dur, {
-    running,
-    onDone: () => setRunning(false),
-  })
+
+  const handleDone = useCallback(() => {
+    setRunning(false)
+    playTimerDone()
+    sendNotif('⏱ Timer complete', `${step.label} is done — tap to continue`)
+    document.title = DEFAULT_TITLE
+  }, [step.label])
+
+  const { remaining, reset } = useCountdown(dur, { running, onDone: handleDone })
   const metric = step.metric(profile)
   const pct = isTimer && dur > 0 ? (1 - remaining / dur) : 0
   const didDone = isTimer && remaining <= 0.05
+
+  // Update tab title with live countdown while running
+  useEffect(() => {
+    if (!isTimer) return
+    if (running && !didDone) {
+      document.title = `⏱ ${formatTime(Math.ceil(remaining))} — ${step.label}`
+    } else {
+      document.title = DEFAULT_TITLE
+    }
+  }, [isTimer, running, didDone, remaining, step.label])
+
+  // Reset title on step unmount
+  useEffect(() => () => { document.title = DEFAULT_TITLE }, [])
+
+  async function handleStart() {
+    await requestNotifPermission()
+    setRunning(true)
+  }
 
   return (
     <div className="slide-up" style={{
@@ -184,7 +231,7 @@ function StepBody({ step, profile, onNext, onBack }) {
                 </button>
                 <button
                   className={`btn btn-primary hit${running ? ' pulse' : ''}`}
-                  onClick={() => setRunning(r => !r)}
+                  onClick={running ? () => setRunning(false) : handleStart}
                   style={{ flex: 1 }}
                 >
                   {running
